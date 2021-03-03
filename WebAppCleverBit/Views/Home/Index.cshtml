@@ -1,0 +1,34 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@model List<MatchViewModel>
+
+<div class="text-center">
+    <h1 class="display-4">Welcome my friend!</h1>
+    <p>Here are the current open matches.</p>
+</div>
+
+<hr />
+
+<div class="row">
+    @foreach (var match in Model)
+    {
+        <div class="col-md-4 p-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Match # @match.MatchID</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <a asp-action="Play" asp-route-id="@match.MatchID">See what's happening</a>
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <p class="text-right">
+                        <small class="text-muted">Expire Date: @match.ExpiryDate.ToString()</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,130 @@
+﻿@{
+    ViewData["Title"] = "Match " + Model.MatchID;
+}
+@model MatchViewModel
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to Match # @Model.MatchID</h1>
+
+    @if (Model.ExpiryDate > DateTime.Now)
+    {
+        <p>Follow what's happening in this match.</p>
+    }
+    else
+    {
+        <p>This match has already ended!!</p>
+        <p>Expire Date @Model.ExpiryDate.ToString()</p>
+        @if (Model.MatchVotes != null && Model.MatchVotes.Any())
+        {
+            <p>
+                <span class="text-success">Congratulations, @Model.MatchVotes.First().Username !!</span>
+            </p>
+        }
+    }
+</div>
+
+<hr />
+
+<div class="row">
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div class="col-md-2">
+            <div class="card border-white">
+                <div class="card-body text-center">
+                    <h3 id="numberGenerated" class="mb-3 text-info">@(Model.HasPlayed ? Model.Number.ToString() : string.Empty)</h3>
+                    @if (!Model.HasPlayed && Model.ExpiryDate > DateTime.Now)
+                    {
+                        <button type="button" id="playNow" class="btn btn-primary">Play Now</button>
+                    }
+                    else if (!Model.HasPlayed && Model.ExpiryDate < DateTime.Now)
+                    {
+                        <span class="text-muted">No vote</span>
+                    }
+
+                    <small class="text-muted" id="playAlready" style="display: @(Model.HasPlayed ? "block" : "none");">Your vote</small>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="col-md-@(User.Identity.IsAuthenticated ? "10" : "12")">
+        <div class="card border-white">
+            <div class="card-body">
+                @if (Model.MatchVotes == null || !Model.MatchVotes.Any())
+                {
+                    <div class="alert alert-warning">
+                        <p class="mb-0">No votes on this match as of the moment.</p>
+                    </div>
+                }
+
+                <div class="table-responsive">
+                    <table class="table table-border">
+                        <thead>
+                            <tr>
+                                <th style="width: 95%;">User</th>
+                                <th style="width: 5%;">Number</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.MatchVotes != null && Model.MatchVotes.Any())
+                            {
+                                @foreach (var vote in Model.MatchVotes)
+                                {
+                                    <tr>
+                                        <td>@vote.Username</td>
+                                        <td class="text-center">@vote.Number</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                        @if (Model.ExpiryDate > DateTime.Now)
+                        {
+                            <tfoot>
+                                <tr>
+                                    <td colspan="2">
+                                        <button type="button" id="refreshResults" class="btn btn-success">Refresh Results</button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $(function () {
+            $('#playNow').click(function () {
+                var number = Math.floor(Math.random() * 100);
+                var obj = {
+                    matchID: parseInt('@Model.MatchID'),
+                    number: number
+                };
+
+                $.post('../Vote', obj, function (response) {
+                    if (response.isSuccess) {
+                        $('#numberGenerated').html(number);
+                        $('#playNow').hide();
+                        $('#playAlready').show();
+
+                        var tbody = '<tr>';
+
+                        tbody += '<td>@User.Identity.Name</td>';
+                        tbody += '<td class="text-center">' + number + '</td>';
+                        tbody += '</tr>';
+
+                        $('table tbody').append(tbody);
+                    }
+                });
+            });
+
+            $('#refreshResults').click(function () {
+                location.reload(true);
+            });
+        });
+    </script>
+}
